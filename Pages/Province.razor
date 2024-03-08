@@ -1,0 +1,37 @@
+﻿@page "/vwProvince"
+
+<PageTitle>Province</PageTitle>
+
+@foreach (var emp in vwProvinceList)
+{
+    <p>@emp.Code | @emp.Description</p>
+}
+
+
+@using Microsoft.AspNetCore.SignalR.Client;
+@using Blazor.Live.Database.Data;
+@using Blazor.Live.Database.Service;
+@inject vwProvinceService vwProvinceService;
+@inject NavigationManager Navigation;
+
+@code {
+    List<vwProvince> vwProvinceList = new List<vwProvince>
+        ();
+    private HubConnection? HubConnection;
+    protected override async Task OnInitializedAsync()
+    {
+        vwProvinceList = await vwProvinceService.GetAllvwProvince();
+
+        HubConnection = new HubConnectionBuilder()
+        .WithUrl(Navigation.ToAbsoluteUri("/vwprovincehub"))
+            .Build();
+
+        HubConnection.On<List<vwProvince>>("RefreshvwProvince", vwProvince =>
+        {
+            vwProvinceList = vwProvince;
+            InvokeAsync(StateHasChanged);
+        });
+
+        await HubConnection.StartAsync();
+    }
+}
